@@ -40,7 +40,7 @@ namespace store.Data.Migrations
 
                     b.HasIndex("GenreID");
 
-                    b.ToTable("Games");
+                    b.ToTable("Games", (string)null);
                 });
 
             modelBuilder.Entity("store.Entities.Genre", b =>
@@ -55,7 +55,7 @@ namespace store.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Genres");
+                    b.ToTable("Genres", (string)null);
 
                     b.HasData(
                         new
