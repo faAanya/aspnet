@@ -1,4 +1,6 @@
+using store.Data;
 using store.DTOs;
+using store.Entities;
 
 namespace store.Endpoints;
 
@@ -6,12 +8,7 @@ public static class GamesEndpoints
 {
     const string GetGameEndPointName = "GetGame";
 
-    private static readonly List<GameDTO> games = [
-        new GameDTO(1, "The Witcher 3: Wild Hunt", "RPG", 29.99m, new DateOnly(2015, 5, 19)),
-    new GameDTO(2, "Cyberpunk 2077", "Action RPG", 49.99m, new DateOnly(2020, 12, 10)),
-    new GameDTO(3, "DOOM Eternal", "FPS", 39.99m, new DateOnly(2020, 3, 20))
-    ];
-
+    private static readonly List<GameDTO> games = new List<GameDTO>();
     public static RouteGroupBuilder MapGamesEndpoints(this WebApplication app)
     {
 
@@ -30,21 +27,29 @@ public static class GamesEndpoints
         }).WithName(GetGameEndPointName);
 
         //POST /games
-        group.MapPost("/", (CreateGameDTO newGame) =>
+        group.MapPost("/", (CreateGameDTO newGame, GameStoreContext dbContext) =>
         {
+            Game game = new()
+            {
+                Name = newGame.Name,
+                Genre = dbContext.Genres.Find(newGame.GenreId),
+                GenreID = newGame.GenreId,
+                Price = newGame.Price,
+                ReleaseDate = newGame.ReleaseDate
+            };
 
+            dbContext.Games.Add(game);
+            dbContext.SaveChanges();
 
-            GameDTO game = new(
-                games.Count + 1,
-                newGame.Name,
-                newGame.Genre,
+            GameDTO gameDTO = new(
+                game.Id,
+                game.Name,
+                game.Genre!.Name,
                 newGame.Price,
-                newGame.ReleaseDate
+                game.ReleaseDate
             );
 
-            games.Add(game);
-
-            return Results.CreatedAtRoute(GetGameEndPointName, new { id = game.Id }, game);
+            return Results.CreatedAtRoute(GetGameEndPointName, new { id = game.Id }, gameDTO);
         });
         group.MapPut("/{id}", (int id, UpdateGameDTO updatedGame) =>
         {
